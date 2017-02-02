@@ -23,22 +23,15 @@ class CompleteMe
 
   def suggest(entry)
     collection = @dictionary.suggest(entry)
-
     output = bubble_sort(collection, entry)
-
     return output
-    #binding.pry
-
   end
 
   def bubble_sort(collection, entry)
-
     sorted = [collection.shift]
-
     counter = 0
 
     until collection[0] == nil
-      #binding.pry
 
       if @selection_hash.empty?
         item_of_interest_1 = 0
@@ -75,16 +68,15 @@ class CompleteMe
   end
 
   def select(entry, selection)
-    if @selection_hash[entry] != nil #if the hash with key of "wi" does exist
-      if @selection_hash[entry][selection] != nil #if the hash with key of "willawaw" does exists
+    if @selection_hash[entry] != nil # if the hash with key (user entry) does exist
+      if @selection_hash[entry][selection] != nil # if the hash with key of user's selection does exist
         @selection_hash[entry][selection] += 1
-      else #if the hash with the key of "willawaw" does not exist
-        @selection_hash[entry][selection] = 1
+      else # if the hash with key of user's selection does NOT exist
+        @selection_hash[entry][selection] = 1 # initialize nested hash value with count = 1
       end
-    else # if the hash with key of "wi" does not exist
-      @selection_hash[entry] = {selection => 1} # add a hash element to the hash key with a counter integer
+    else # if the hash with key (user entry) does NOT exist
+      @selection_hash[entry] = {selection => 1} # initialize nested hash with key of selection and value with count = 1
     end
-
   end
 
 end
@@ -96,9 +88,6 @@ class Node
     @value = value
     @children = {}
     @word = false
-    @weight = 0
-    @parent = parent
-    @final_suggestion = []
   end
 
   def insert(word)
@@ -130,45 +119,35 @@ class Node
   end
 
   def suggest(entry)
-
     # find starting node
     node = self.find_starting_node(entry)
-
     # initialize suggetion
     suggestion = entry
-    sugg_arr = []
+    sugg_arr = [] # "sugar" = suggestion array ;)
     start_node = node
-
     # test that the entry isn't also a word
     sugg_arr = node.test_if_node_is_word(sugg_arr, suggestion)
-
-    #binding.pry
-
-    sugg_arr = node.at_key_branches(node, suggestion, sugg_arr)
-
+    # next evaluate how many children we have so we can iterate through them
+    sugg_arr = node.children_iterator(node, suggestion, sugg_arr)
     # return our suggested array
-
     return sugg_arr
-    #binding.pry
   end
 
-  sugg_arr = def at_key_branches(start_node, entry, sugg_arr)
-    key_arr = start_node.children.keys
+  def children_iterator(start_node, entry, sugg_arr)
+    key_arr = start_node.children.keys # create an array of all children
     key_arr.each do |key|
       # we re-initialize the suggestion and start_node
       suggestion = entry
       node = start_node
-      # then we run through the keys for the node and shovel any valid suggestions
-      # into our suggested array
-      sugg_arr = node.for_each_key(key, suggestion, node, sugg_arr)
-      #binding.pry
+      # then we run each child into the suggester builder
+      sugg_arr = node.suggester_builder(key, suggestion, node, sugg_arr)
     end
+    # return our suggested array
     return sugg_arr
-    #binding.pry
   end
 
-  def for_each_key(key, suggestion, node, sugg_arr)
-    # while our key (a letter, the child of our parent node) is valid
+  def suggester_builder(key, suggestion, node, sugg_arr)
+    # while our children (key) exist
     while key!=nil
       # generate a new suggestion by adding the new key to that suggestion
       suggestion = node.suggester_rolodex(suggestion, key)
@@ -179,48 +158,48 @@ class Node
         # otherwise move into our new suggestion's node
         node = node.node_rolodex(key)
       end
-      # check to see if the new suggestion is valid
-      # if so move into the suggestion array
+      # check to see current suggestion is a word and shovel into sugar
       sugg_arr = node.test_if_node_is_word(sugg_arr, suggestion)
-      # make the new key the next child
-      #binding.pry
-      # mini_word_storage
+      # determine which child is next
       if node.children.keys.length < 2
+        # if there's only one child (or none), we set that child to our current node
         key = node.children.keys[0]
+        # if key = nil, the sugggester stops because the current node has ended
       else
-        #binding.pry
-        node.at_key_branches(node, suggestion, sugg_arr)
+        # if there is more than one child, we must go back to our children_iterator to pick which one
+        node.children_iterator(node, suggestion, sugg_arr)
         key = nil
+        # once that is complete, we terminate the suggester for this branch
       end
-      #binding.pry #sugg_arr is correct
     end
     return sugg_arr
-    #binding.pry
+    # return our suggested array
   end
 
-  sugg_arr = def test_if_node_is_word(array, entry)
-    if word
-      array << entry
+  def test_if_node_is_word(sugg_arr, entry)
+    if word # if the current word is valid
+      sugg_arr << entry # shovel!
     end
-    return array
+    return sugg_arr
   end
 
   def find_starting_node(entry)
+    # rifle through our dictionary so we can start where the user wants us to
     counter = 0
     letter = entry[counter]
     node = self
     while letter != nil
-      # single line if statement, block this guy from creating a nil
+      # check to make sure node is not nil
       if node.node_rolodex(letter).nil?
         node = node
       else
+        # set node to the next child of our user input
         node = node.node_rolodex(letter)
       end
-      # binding.pry
       counter += 1
       letter = entry[counter]
     end
-    node
+    return node
   end
 
   def node_rolodex(letter)

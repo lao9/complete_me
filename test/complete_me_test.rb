@@ -2,6 +2,7 @@ require "minitest"
 require "minitest/emoji"
 require "minitest/autorun"
 require "../complete_me/lib/complete_me"
+require 'pry'
 
 class CompleteMeTest < Minitest::Test
   attr_reader :cm
@@ -61,9 +62,32 @@ class CompleteMeTest < Minitest::Test
     assert_equal "doggerelist", cm.suggest("doggerel").first
   end
 
+  def test_substring_specific_selection_tracking
+    cm.populate(large_word_list)
+    cm.select("piz", "pizzeria")
+    cm.select("piz", "pizzeria")
+    cm.select("piz", "pizzeria")
+    cm.select("pi", "pizza")
+    cm.select("pi", "pizza")
+    cm.select("pi", "pizzicato")
+    assert_equal "pizzeria", cm.suggest("piz").first
+    assert_equal ["pizza", "pizzicato"], cm.suggest("pi").take(2)
+  end
+
   def test_selects_other_trees
     insert_words(["wizardly", "williwaw", "wizards"])
     assert_equal ["williwaw", "wizardly", "wizards"], cm.suggest("wi").sort
+  end
+
+  def test_denver_extension
+    cm.populate(denver_address_list)
+    assert_equal 296879, cm.count
+    assert_equal ["4400 N Mariposa Way", "4400 N Madison St", "4400 N Malaya St"], cm.suggest("4400 N M")
+    assert_equal ["1 N Clarkson St", "1 N Crestmoor Dr", "1 N Corona St"], cm.suggest("1 N C")
+    cm.select("1 N C", "1 N Corona St")
+    cm.select("1 N C", "1 N Corona St")
+    cm.select("1 N C", "1 N Crestmoor Dr")
+    assert_equal ["1 N Corona St", "1 N Crestmoor Dr", "1 N Clarkson St"], cm.suggest("1 N C")
   end
 
   def insert_words(words)
@@ -77,4 +101,9 @@ class CompleteMeTest < Minitest::Test
   def large_word_list
     File.read("/usr/share/dict/words")
   end
+
+  def denver_address_list
+    File.read("./test/denver_addresses.txt")
+  end
+
 end
