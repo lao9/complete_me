@@ -27,7 +27,7 @@ class CompleteMe
     output = bubble_sort(collection, entry)
 
     return output
-    binding.pry
+    #binding.pry
 
   end
 
@@ -89,20 +89,6 @@ class CompleteMe
 
 end
 
-class SelectionHistory
-  attr_reader :entry, :selection
-  attr_accessor :count
-  def initialize(entry, selection)
-    @entry = entry
-    @count = 0
-    @selection = selection
-  end
-
-  def counter
-    @count += 1
-  end
-
-end
 
 class Node
   attr_accessor :value, :children, :word, :parent
@@ -156,36 +142,60 @@ class Node
     # test that the entry isn't also a word
     sugg_arr = node.test_if_node_is_word(sugg_arr, suggestion)
 
+    #binding.pry
 
-    key_arr = node.children.keys
-    key = key_arr[0]
+    sugg_arr = node.at_key_branches(node, suggestion, sugg_arr)
 
-    key_arr.each do |key|
-      suggestion = entry
-      node = start_node
-      sugg_arr = node.for_each_key(key, suggestion, node, sugg_arr)
-    end
+    # return our suggested array
 
     return sugg_arr
-
+    #binding.pry
   end
 
-  def at_key_branches
-
+  sugg_arr = def at_key_branches(start_node, entry, sugg_arr)
+    key_arr = start_node.children.keys
+    key_arr.each do |key|
+      # we re-initialize the suggestion and start_node
+      suggestion = entry
+      node = start_node
+      # then we run through the keys for the node and shovel any valid suggestions
+      # into our suggested array
+      sugg_arr = node.for_each_key(key, suggestion, node, sugg_arr)
+      #binding.pry
+    end
+    return sugg_arr
+    #binding.pry
   end
 
   def for_each_key(key, suggestion, node, sugg_arr)
+    # while our key (a letter, the child of our parent node) is valid
     while key!=nil
+      # generate a new suggestion by adding the new key to that suggestion
       suggestion = node.suggester_rolodex(suggestion, key)
+      # ensure that our key is not reset to nil
       if node.node_rolodex(key).nil?
         node = node
       else
+        # otherwise move into our new suggestion's node
         node = node.node_rolodex(key)
       end
+      # check to see if the new suggestion is valid
+      # if so move into the suggestion array
       sugg_arr = node.test_if_node_is_word(sugg_arr, suggestion)
-      key = node.children.keys[0]
+      # make the new key the next child
+      #binding.pry
+      # mini_word_storage
+      if node.children.keys.length < 2
+        key = node.children.keys[0]
+      else
+        #binding.pry
+        node.at_key_branches(node, suggestion, sugg_arr)
+        key = nil
+      end
+      #binding.pry #sugg_arr is correct
     end
     return sugg_arr
+    #binding.pry
   end
 
   sugg_arr = def test_if_node_is_word(array, entry)
