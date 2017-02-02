@@ -30,27 +30,25 @@ class CompleteMeTest < Minitest::Test
 
   def test_suggests_off_of_small_dataset
     insert_words(["pizza", "aardvark", "zombies", "a", "xylophones"])
-    #assert_equal ["pizza"], cm.suggest("p")
-    #assert_equal ["pizza"], cm.suggest("piz")
+    assert_equal ["pizza"], cm.suggest("p")
+    assert_equal ["pizza"], cm.suggest("piz")
     assert_equal ["zombies"], cm.suggest("zo")
-    # assert_equal ["a", "aardvark"], cm.suggest("a").sort
-    # assert_equal ["aardvark"], cm.suggest("aa")
+    assert_equal ["a", "aardvark"], cm.suggest("a").sort
+    assert_equal ["aardvark"], cm.suggest("aa")
   end
 
+
   def test_inserts_medium_dataset
-    skip
     cm.populate(medium_word_list)
     assert_equal medium_word_list.split("\n").count, cm.count
   end
 
   def test_suggests_off_of_medium_dataset
-    skip
     cm.populate(medium_word_list)
     assert_equal ["williwaw", "wizardly"], cm.suggest("wi").sort
   end
 
   def test_selects_off_of_medium_dataset
-    skip
     cm.populate(medium_word_list)
     cm.select("wi", "wizardly")
     assert_equal ["wizardly", "williwaw"], cm.suggest("wi")
@@ -62,6 +60,11 @@ class CompleteMeTest < Minitest::Test
     assert_equal ["doggerel", "doggereler", "doggerelism", "doggerelist", "doggerelize", "doggerelizer"], cm.suggest("doggerel").sort
     cm.select("doggerel", "doggerelist")
     assert_equal "doggerelist", cm.suggest("doggerel").first
+  end
+
+  def test_selects_other_trees
+    insert_words(["wizardly", "williwaw", "wizards"])
+    assert_equal ["williwaw", "wizardly", "wizards"], cm.suggest("wi").sort
   end
 
   def insert_words(words)
